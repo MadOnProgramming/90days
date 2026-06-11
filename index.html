@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://accounts.google.com/gsi/client" async></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -303,6 +304,91 @@
     .timer-btn:hover { background: var(--paper); border-color: var(--accent); }
     .timer-fab { position: fixed; bottom: 20px; right: 20px; z-index: 51; background: var(--accent); color: white; border: none; border-radius: 50%; width: 46px; height: 46px; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 16px rgba(26,107,74,0.35); display: none; align-items: center; justify-content: center; }
 
+    /* ── LOGIN SCREEN ── */
+    #loginView {
+      position: fixed; inset: 0; z-index: 400;
+      background: #1c2b23;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px;
+    }
+    .login-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.4rem; color: white; letter-spacing: -0.5px;
+      text-align: center; margin-bottom: 6px;
+    }
+    .login-logo em { font-style: italic; color: #6fcf97; }
+    .login-tagline {
+      font-size: 0.82rem; color: rgba(255,255,255,0.4);
+      text-align: center; margin-bottom: 48px;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .login-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 32px 28px;
+      width: 100%; max-width: 360px;
+      display: flex; flex-direction: column; align-items: center; gap: 20px;
+    }
+    .login-icon { font-size: 3rem; }
+    .login-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem; color: white; text-align: center;
+    }
+    .login-desc {
+      font-size: 0.82rem; color: rgba(255,255,255,0.45);
+      text-align: center; line-height: 1.6;
+    }
+    .google-btn {
+      display: flex; align-items: center; gap: 12px;
+      background: white; border: none; border-radius: 8px;
+      padding: 12px 24px; cursor: pointer; width: 100%;
+      justify-content: center;
+      font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500;
+      color: #1f1f1f; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      transition: box-shadow 0.15s, transform 0.1s;
+    }
+    .google-btn:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.3); transform: translateY(-1px); }
+    .google-btn svg { flex-shrink: 0; }
+    .login-privacy {
+      font-size: 0.7rem; color: rgba(255,255,255,0.25);
+      text-align: center; line-height: 1.5;
+    }
+
+    /* ── DRAWER PROFILE ── */
+    .drawer-profile {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .profile-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      object-fit: cover; flex-shrink: 0;
+      border: 2px solid rgba(111,207,151,0.4);
+    }
+    .profile-avatar-placeholder {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(111,207,151,0.2); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; border: 2px solid rgba(111,207,151,0.4);
+    }
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name {
+      font-size: 0.88rem; font-weight: 500; color: white;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .profile-email {
+      font-size: 0.7rem; color: rgba(255,255,255,0.35);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+    .signout-btn {
+      background: none; border: none; color: rgba(255,255,255,0.3);
+      cursor: pointer; font-size: 0.75rem; padding: 4px;
+      transition: color 0.15s; flex-shrink: 0;
+    }
+    .signout-btn:hover { color: #ff7675; }
+
     /* confetti */
     .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; overflow: hidden; }
     .confetti-piece { position: absolute; width: 8px; height: 8px; border-radius: 2px; animation: confetti-fall 1.4s ease-out forwards; }
@@ -320,6 +406,27 @@
 </head>
 <body>
 
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="loginView">
+  <div class="login-logo">90-Day <em>Challenges</em></div>
+  <div class="login-tagline">Personal habit tracker</div>
+  <div class="login-card">
+    <div class="login-icon">🎯</div>
+    <div class="login-title">Sign in to continue</div>
+    <div class="login-desc">Your challenges are stored locally.<br>Sign in just to personalize your experience.</div>
+    <button class="google-btn" onclick="handleGoogleSignIn()">
+      <svg width="18" height="18" viewBox="0 0 18 18">
+        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+        <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/>
+        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+      </svg>
+      Continue with Google
+    </button>
+    <div class="login-privacy">No data is sent to any server.<br>Everything stays in your browser.</div>
+  </div>
+</div>
+
 <!-- ══ DRAWER SCRIM ══ -->
 <div class="drawer-scrim" id="drawerScrim" onclick="closeDrawer()"></div>
 
@@ -329,6 +436,9 @@
     <div class="drawer-logo">90-Day <em>Challenges</em></div>
     <div class="drawer-tagline">Your personal tracker</div>
   </div>
+
+  <!-- Profile injected here by JS -->
+  <div id="drawerProfile"></div>
 
   <div class="drawer-nav" id="drawerNav">
     <div class="drawer-section-label">Challenges</div>
@@ -830,8 +940,96 @@ document.addEventListener('touchend', e => {
   } catch {}
 })();
 
+// ── GOOGLE OAUTH ──────────────────────────────────────────────────────
+const CLIENT_ID  = '253790476446-mmsr9bfec2fsb8tbmcqr5ubetsjifonv.apps.googleusercontent.com';
+const AUTH_STORE = 'habit90_user';
+let currentUser  = null;
+
+function loadUser() {
+  try { const r = localStorage.getItem(AUTH_STORE); if (r) return JSON.parse(r); } catch {}
+  return null;
+}
+function saveUser(u) { localStorage.setItem(AUTH_STORE, JSON.stringify(u)); }
+function clearUser() { localStorage.removeItem(AUTH_STORE); }
+
+function parseJwt(token) {
+  try {
+    return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+  } catch { return null; }
+}
+
+function onGoogleCredential(response) {
+  const payload = parseJwt(response.credential);
+  if (!payload) return;
+  currentUser = { name: payload.name, email: payload.email, picture: payload.picture, sub: payload.sub };
+  saveUser(currentUser);
+  enterApp();
+}
+
+function handleGoogleSignIn() {
+  google.accounts.id.initialize({ client_id: CLIENT_ID, callback: onGoogleCredential, auto_select: false });
+  google.accounts.id.prompt(n => {
+    if (n.isNotDisplayed() || n.isSkippedMoment()) {
+      // render a real button as fallback
+      const fb = document.getElementById('googleFallbackBtn');
+      if (fb) google.accounts.id.renderButton(fb, { theme:'outline', size:'large', width:300 });
+    }
+  });
+}
+
+function signOut() {
+  if (typeof google !== 'undefined') google.accounts.id.disableAutoSelect();
+  clearUser(); currentUser = null;
+  closeDrawer();
+  document.getElementById('drawerProfile').innerHTML = '';
+  document.getElementById('loginView').style.display = 'flex';
+}
+
+function renderDrawerProfile() {
+  if (!currentUser) return;
+  document.getElementById('drawerProfile').innerHTML = `
+    <div class="drawer-profile">
+      ${currentUser.picture
+        ? `<img class="profile-avatar" src="${currentUser.picture}" alt="" referrerpolicy="no-referrer"/>`
+        : `<div class="profile-avatar-placeholder">👤</div>`}
+      <div class="profile-info">
+        <div class="profile-name">${escHtml(currentUser.name)}</div>
+        <div class="profile-email">${escHtml(currentUser.email)}</div>
+      </div>
+      <button class="signout-btn" onclick="signOut()" title="Sign out">⏻</button>
+    </div>`;
+}
+
+function enterApp() {
+  document.getElementById('loginView').style.display = 'none';
+  renderDrawerProfile();
+  showDashboard();
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────
-showDashboard();
+currentUser = loadUser();
+if (currentUser) {
+  // Already signed in — skip login screen immediately
+  document.getElementById('loginView').style.display = 'none';
+  renderDrawerProfile();
+  showDashboard();
+} else {
+  // Add fallback Google button container to login card
+  document.querySelector('.login-card').insertAdjacentHTML('beforeend', '<div id="googleFallbackBtn" style="margin-top:4px;"></div>');
+  // Init GSI once library is ready
+  const initGSI = () => {
+    if (typeof google === 'undefined') { setTimeout(initGSI, 200); return; }
+    google.accounts.id.initialize({ client_id: CLIENT_ID, callback: onGoogleCredential, auto_select: true });
+    google.accounts.id.prompt(n => {
+      if (n.isNotDisplayed() || n.isSkippedMoment()) {
+        const fb = document.getElementById('googleFallbackBtn');
+        if (fb) google.accounts.id.renderButton(fb, { theme:'outline', size:'large', width:300 });
+      }
+    });
+  };
+  initGSI();
+}
+
 </script>
 </body>
 </html>
