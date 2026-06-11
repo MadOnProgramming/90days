@@ -11,161 +11,217 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --ink:     #0f1117;
-      --paper:   #f7f4ef;
-      --muted:   #a09a92;
-      --rule:    #e2ddd7;
-      --accent:  #1a6b4a;
-      --accent2: #d4a847;
-      --radius:  6px;
+      --ink:        #0f1117;
+      --paper:      #f7f4ef;
+      --muted:      #a09a92;
+      --rule:       #e2ddd7;
+      --accent:     #1a6b4a;
+      --accent-lt:  #e8f5ef;
+      --accent2:    #d4a847;
+      --drawer-w:   280px;
+      --topbar-h:   56px;
+      --radius:     8px;
     }
 
-    body { font-family: 'Inter', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: 'Inter', sans-serif; background: var(--paper); color: var(--ink); font-size: 15px; line-height: 1.6; display: flex; flex-direction: column; }
 
-    /* ── DASHBOARD LIST ── */
-    #dashboardView { max-width: 700px; margin: 0 auto; padding: 48px 24px 80px; }
+    /* ══════════════════════════════════════════
+       DRAWER
+    ══════════════════════════════════════════ */
+    .drawer-scrim {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(15,17,23,0); pointer-events: none;
+      transition: background 0.28s ease;
+    }
+    .drawer-scrim.open {
+      background: rgba(15,17,23,0.45); pointer-events: auto;
+    }
 
-    .page-title { font-family: 'DM Serif Display', serif; font-size: 2.2rem; letter-spacing: -0.5px; margin-bottom: 6px; }
-    .page-title em { font-style: italic; color: var(--accent); }
-    .page-subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 36px; }
+    .drawer {
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 201;
+      width: var(--drawer-w);
+      background: #1c2b23;
+      transform: translateX(calc(-1 * var(--drawer-w)));
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .drawer.open { transform: translateX(0); }
 
-    .challenge-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+    /* Drawer header */
+    .drawer-header {
+      padding: 40px 20px 24px;
+      background: linear-gradient(160deg, #163d28 0%, #1c2b23 100%);
+      flex-shrink: 0;
+    }
+    .drawer-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem; color: white; letter-spacing: -0.3px;
+      line-height: 1.2;
+    }
+    .drawer-logo em { font-style: italic; color: #6fcf97; }
+    .drawer-tagline {
+      font-size: 0.7rem; color: rgba(255,255,255,0.4);
+      text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px;
+    }
+
+    /* Nav sections */
+    .drawer-section-label {
+      padding: 20px 20px 6px;
+      font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.3); font-weight: 600;
+    }
+
+    .drawer-nav { flex: 1; overflow-y: auto; padding-bottom: 16px; }
+    .drawer-nav::-webkit-scrollbar { width: 0; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 13px;
+      padding: 11px 20px; cursor: pointer;
+      color: rgba(255,255,255,0.65);
+      font-size: 0.88rem; font-weight: 400;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+    .nav-item.active {
+      background: rgba(111,207,151,0.12);
+      color: #6fcf97; border-left-color: #6fcf97;
+      font-weight: 500;
+    }
+    .nav-item .nav-icon { font-size: 1.1rem; width: 22px; text-align: center; flex-shrink: 0; }
+    .nav-item .nav-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nav-item .nav-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem; color: rgba(255,255,255,0.3);
+    }
+    .nav-item.active .nav-pct { color: #6fcf97; }
+
+    .drawer-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 8px 16px; }
+
+    /* Drawer footer */
+    .drawer-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .drawer-footer-btn {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 10px 12px;
+      background: rgba(111,207,151,0.15);
+      border: 1px solid rgba(111,207,151,0.25);
+      border-radius: var(--radius);
+      color: #6fcf97; font-family: 'Inter', sans-serif;
+      font-size: 0.82rem; font-weight: 500; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .drawer-footer-btn:hover { background: rgba(111,207,151,0.25); }
+
+    /* ══════════════════════════════════════════
+       TOP APP BAR
+    ══════════════════════════════════════════ */
+    .topbar {
+      height: var(--topbar-h);
+      background: white;
+      border-bottom: 1px solid var(--rule);
+      display: flex; align-items: center;
+      padding: 0 16px; gap: 12px;
+      flex-shrink: 0; z-index: 10;
+    }
+
+    .hamburger {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: none; background: none; cursor: pointer;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 5px;
+      transition: background 0.15s; flex-shrink: 0;
+    }
+    .hamburger:hover { background: var(--paper); }
+    .hamburger span {
+      display: block; width: 20px; height: 2px;
+      background: var(--ink); border-radius: 2px;
+      transition: transform 0.25s, opacity 0.25s;
+    }
+
+    .topbar-title {
+      flex: 1; font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem; letter-spacing: -0.2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topbar-emoji { font-size: 1.3rem; flex-shrink: 0; }
+
+    /* ══════════════════════════════════════════
+       CONTENT AREA
+    ══════════════════════════════════════════ */
+    .content-wrap {
+      flex: 1; overflow-y: auto;
+      transition: margin-left 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── DASHBOARD ── */
+    #dashboardView { max-width: 680px; margin: 0 auto; padding: 32px 20px 80px; }
+
+    .dash-heading { font-family: 'DM Serif Display', serif; font-size: 1.7rem; letter-spacing: -0.4px; margin-bottom: 4px; }
+    .dash-heading em { font-style: italic; color: var(--accent); }
+    .dash-sub { color: var(--muted); font-size: 0.82rem; margin-bottom: 28px; }
+
+    .challenge-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
 
     .challenge-card {
-      background: white;
-      border: 1.5px solid var(--rule);
-      border-radius: 10px;
-      padding: 18px 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      transition: border-color 0.15s, transform 0.1s;
+      background: white; border: 1.5px solid var(--rule);
+      border-radius: 12px; padding: 16px 18px;
+      cursor: pointer; display: flex; align-items: center; gap: 14px;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
     }
-    .challenge-card:hover { border-color: var(--accent); transform: translateY(-1px); }
-
-    .card-emoji { font-size: 1.8rem; flex-shrink: 0; }
-
+    .challenge-card:hover { border-color: var(--accent); box-shadow: 0 2px 12px rgba(26,107,74,0.1); transform: translateY(-1px); }
+    .card-emoji { font-size: 1.7rem; flex-shrink: 0; }
     .card-body { flex: 1; min-width: 0; }
-    .card-name { font-family: 'DM Serif Display', serif; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-meta { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
-
-    .card-progress-wrap { width: 80px; flex-shrink: 0; }
-    .card-pct { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--accent); text-align: right; }
+    .card-name { font-family: 'DM Serif Display', serif; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-meta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .card-progress-wrap { width: 70px; flex-shrink: 0; }
+    .card-pct { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--accent); text-align: right; }
     .card-bar { height: 4px; background: var(--rule); border-radius: 99px; margin-top: 4px; overflow: hidden; }
     .card-bar-fill { height: 100%; background: var(--accent); border-radius: 99px; }
-
-    .card-delete {
-      background: none; border: none; color: var(--muted); cursor: pointer;
-      font-size: 1rem; padding: 4px 6px; border-radius: 4px; flex-shrink: 0;
-      transition: color 0.15s, background 0.15s;
-    }
+    .card-delete { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.95rem; padding: 4px 6px; border-radius: 4px; flex-shrink: 0; transition: color 0.15s, background 0.15s; }
     .card-delete:hover { color: #c0392b; background: #fdf0ee; }
 
-    .empty-state {
-      text-align: center; padding: 48px 24px;
-      border: 2px dashed var(--rule); border-radius: 10px; color: var(--muted);
-    }
+    .empty-state { text-align: center; padding: 48px 24px; border: 2px dashed var(--rule); border-radius: 12px; color: var(--muted); }
     .empty-state .big { font-size: 2.5rem; margin-bottom: 12px; }
-    .empty-state p { font-size: 0.88rem; }
+    .empty-state p { font-size: 0.85rem; }
 
-    /* ── NEW CHALLENGE FORM ── */
     .new-btn {
       display: flex; align-items: center; gap: 8px;
-      background: var(--accent); color: white;
-      border: none; border-radius: var(--radius);
-      padding: 11px 20px; font-family: 'Inter', sans-serif;
-      font-size: 0.88rem; font-weight: 500; cursor: pointer;
-      transition: opacity 0.15s;
+      background: var(--accent); color: white; border: none;
+      border-radius: var(--radius); padding: 11px 20px;
+      font-family: 'Inter', sans-serif; font-size: 0.88rem;
+      font-weight: 500; cursor: pointer; transition: opacity 0.15s;
     }
     .new-btn:hover { opacity: 0.85; }
 
-    .modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(15,17,23,0.45); z-index: 100;
-      align-items: center; justify-content: center; padding: 20px;
-    }
-    .modal-overlay.open { display: flex; }
-
-    .modal {
-      background: var(--paper); border-radius: 12px;
-      padding: 32px; width: 100%; max-width: 460px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    }
-    .modal-title { font-family: 'DM Serif Display', serif; font-size: 1.4rem; margin-bottom: 24px; }
-
-    .form-row { margin-bottom: 18px; }
-    .form-label { display: block; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 500; margin-bottom: 7px; }
-
-    .form-input, .form-select {
-      width: 100%; padding: 10px 14px;
-      border: 1.5px solid var(--rule); border-radius: var(--radius);
-      font-family: 'Inter', sans-serif; font-size: 0.88rem;
-      background: white; color: var(--ink); outline: none;
-      transition: border-color 0.15s;
-    }
-    .form-input:focus, .form-select:focus { border-color: var(--accent); }
-    .form-input::placeholder { color: var(--muted); }
-
-    .emoji-picker { display: flex; flex-wrap: wrap; gap: 8px; }
-    .emoji-opt {
-      font-size: 1.4rem; width: 40px; height: 40px;
-      border-radius: 8px; border: 2px solid var(--rule);
-      background: white; cursor: pointer; display: flex;
-      align-items: center; justify-content: center;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .emoji-opt.selected { border-color: var(--accent); background: rgba(26,107,74,0.08); }
-
-    .modal-actions { display: flex; gap: 10px; margin-top: 28px; justify-content: flex-end; }
-
-    .btn { padding: 9px 18px; border-radius: var(--radius); border: none; font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
-    .btn:hover { opacity: 0.85; }
-    .btn-primary { background: var(--accent); color: white; }
-    .btn-ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--rule); }
-
-    /* ── TRACKER VIEW ── */
+    /* ── TRACKER ── */
     #trackerView { display: none; }
 
-    header {
-      border-bottom: 1px solid var(--rule);
-      padding: 20px 32px;
-      display: flex; align-items: center; gap: 16px;
-    }
-    .back-btn {
-      background: none; border: 1.5px solid var(--rule); border-radius: var(--radius);
-      padding: 6px 12px; font-size: 0.8rem; color: var(--muted);
-      cursor: pointer; font-family: 'Inter', sans-serif;
-      transition: border-color 0.15s, color 0.15s;
-    }
-    .back-btn:hover { border-color: var(--ink); color: var(--ink); }
-
-    .header-emoji { font-size: 1.6rem; }
-    .header-title { font-family: 'DM Serif Display', serif; font-size: 1.6rem; letter-spacing: -0.3px; }
-    .header-date { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
-
-    .stats {
-      display: flex; border-bottom: 1px solid var(--rule); background: white;
-    }
-    .stat { flex: 1; padding: 16px 20px; border-right: 1px solid var(--rule); min-width: 0; }
+    .stats { display: flex; border-bottom: 1px solid var(--rule); background: white; }
+    .stat { flex: 1; padding: 14px 16px; border-right: 1px solid var(--rule); min-width: 0; }
     .stat:last-child { border-right: none; }
-    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 500; color: var(--accent); line-height: 1; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 500; color: var(--accent); line-height: 1; }
     .stat-value.amber { color: var(--accent2); }
-    .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.09em; margin-top: 4px; font-weight: 500; }
+    .stat-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.09em; margin-top: 3px; font-weight: 500; }
 
-    main { max-width: 880px; margin: 0 auto; padding: 32px 24px 80px; }
+    main { max-width: 880px; margin: 0 auto; padding: 28px 20px 80px; }
 
-    .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; }
-    .section-title { font-family: 'DM Serif Display', serif; font-size: 1.2rem; }
-    .section-hint { font-size: 0.73rem; color: var(--muted); }
+    .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+    .section-title { font-family: 'DM Serif Display', serif; font-size: 1.15rem; }
+    .section-hint { font-size: 0.72rem; color: var(--muted); }
 
-    .progress-wrap { margin-bottom: 36px; }
-    .progress-meta { display: flex; justify-content: space-between; font-size: 0.73rem; color: var(--muted); margin-bottom: 7px; }
+    .progress-wrap { margin-bottom: 32px; }
+    .progress-meta { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); margin-bottom: 6px; }
     .progress-track { height: 7px; background: var(--rule); border-radius: 99px; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #2d9e6e); border-radius: 99px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
 
-    .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-bottom: 44px; }
-
+    .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-bottom: 40px; }
     .day-cell {
       aspect-ratio: 1; border-radius: var(--radius);
       border: 1.5px solid var(--rule); background: #e8e2da;
@@ -179,138 +235,73 @@
     .day-cell.today { border: 2px solid var(--accent2); background: #fff8e8; box-shadow: 0 0 0 3px rgba(212,168,71,0.15); }
     .day-cell.today.checked { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,107,74,0.2); }
     .day-cell.future { opacity: 0.35; cursor: default; pointer-events: none; }
-
-    .day-num { position: absolute; top: 3px; left: 5px; font-family: 'JetBrains Mono', monospace; font-size: 0.52rem; color: var(--muted); line-height: 1; }
+    .day-num { position: absolute; top: 3px; left: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.5rem; color: var(--muted); line-height: 1; }
     .day-cell.checked .day-num { color: rgba(255,255,255,0.5); }
-
     .day-cell:not(.future):hover .tooltip { opacity: 1; transform: translateX(-50%) translateY(-4px); }
-    .tooltip {
-      opacity: 0; pointer-events: none; position: absolute;
-      bottom: calc(100% + 7px); left: 50%;
-      transform: translateX(-50%) translateY(0);
-      background: var(--ink); color: white; font-size: 0.68rem;
-      padding: 4px 8px; border-radius: 4px; white-space: nowrap;
-      transition: opacity 0.15s, transform 0.15s; z-index: 10;
-    }
+    .tooltip { opacity: 0; pointer-events: none; position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%) translateY(0); background: var(--ink); color: white; font-size: 0.66rem; padding: 4px 8px; border-radius: 4px; white-space: nowrap; transition: opacity 0.15s, transform 0.15s; z-index: 10; }
     .tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 4px solid transparent; border-top-color: var(--ink); }
 
-    .milestone {
-      display: none; background: linear-gradient(135deg, var(--accent), #2d9e6e);
-      color: white; padding: 14px 20px; border-radius: var(--radius);
-      margin-bottom: 24px; align-items: center; gap: 12px;
-    }
+    .milestone { display: none; background: linear-gradient(135deg, var(--accent), #2d9e6e); color: white; padding: 14px 18px; border-radius: var(--radius); margin-bottom: 22px; align-items: center; gap: 12px; }
     .milestone.visible { display: flex; }
     .milestone-icon { font-size: 1.4rem; }
-    .milestone-text strong { display: block; font-size: 0.95rem; font-weight: 600; margin-bottom: 1px; }
-    .milestone-text span { font-size: 0.82rem; opacity: 0.9; }
+    .milestone-text strong { display: block; font-size: 0.92rem; font-weight: 600; margin-bottom: 1px; }
+    .milestone-text span { font-size: 0.8rem; opacity: 0.9; }
 
-    .journal-controls { display: flex; gap: 10px; margin-bottom: 18px; align-items: center; flex-wrap: wrap; }
-    .note-input {
-      flex: 1; min-width: 200px; padding: 9px 14px;
-      border: 1.5px solid var(--rule); border-radius: var(--radius);
-      font-family: 'Inter', sans-serif; font-size: 0.85rem;
-      background: white; color: var(--ink); outline: none; transition: border-color 0.15s;
-    }
+    .journal-controls { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+    .note-input { flex: 1; min-width: 180px; padding: 9px 13px; border: 1.5px solid var(--rule); border-radius: var(--radius); font-family: 'Inter', sans-serif; font-size: 0.84rem; background: white; color: var(--ink); outline: none; transition: border-color 0.15s; }
     .note-input:focus { border-color: var(--accent); }
     .note-input::placeholder { color: var(--muted); }
 
-    .log-list { display: flex; flex-direction: column; gap: 9px; }
-    .log-entry { display: flex; gap: 12px; align-items: flex-start; padding: 11px 15px; background: white; border-radius: var(--radius); border: 1px solid var(--rule); }
-    .log-day-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 500; color: white; background: var(--accent); padding: 2px 7px; border-radius: 3px; white-space: nowrap; margin-top: 2px; }
-    .log-text { font-size: 0.84rem; color: var(--ink); flex: 1; }
-    .log-date { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
-    .empty-log { text-align: center; padding: 28px; color: var(--muted); font-size: 0.83rem; border: 1.5px dashed var(--rule); border-radius: var(--radius); }
+    .log-list { display: flex; flex-direction: column; gap: 8px; }
+    .log-entry { display: flex; gap: 12px; align-items: flex-start; padding: 10px 14px; background: white; border-radius: var(--radius); border: 1px solid var(--rule); }
+    .log-day-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 500; color: white; background: var(--accent); padding: 2px 7px; border-radius: 3px; white-space: nowrap; margin-top: 2px; }
+    .log-text { font-size: 0.83rem; color: var(--ink); flex: 1; }
+    .log-date { font-size: 0.68rem; color: var(--muted); white-space: nowrap; }
+    .empty-log { text-align: center; padding: 24px; color: var(--muted); font-size: 0.82rem; border: 1.5px dashed var(--rule); border-radius: var(--radius); }
 
-    .bottom-actions { margin-top: 52px; padding-top: 20px; border-top: 1px solid var(--rule); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-    .bottom-note { font-size: 0.75rem; color: var(--muted); }
+    .bottom-actions { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--rule); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .bottom-note { font-size: 0.73rem; color: var(--muted); }
+
+    /* ── MODAL ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,17,23,0.45); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--paper); border-radius: 14px; padding: 28px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.22); }
+    .modal-title { font-family: 'DM Serif Display', serif; font-size: 1.3rem; margin-bottom: 22px; }
+    .form-row { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 500; margin-bottom: 6px; }
+    .form-input { width: 100%; padding: 10px 13px; border: 1.5px solid var(--rule); border-radius: var(--radius); font-family: 'Inter', sans-serif; font-size: 0.87rem; background: white; color: var(--ink); outline: none; transition: border-color 0.15s; }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--muted); }
+    .emoji-picker { display: flex; flex-wrap: wrap; gap: 7px; }
+    .emoji-opt { font-size: 1.3rem; width: 38px; height: 38px; border-radius: 8px; border: 2px solid var(--rule); background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, background 0.15s; }
+    .emoji-opt.selected { border-color: var(--accent); background: var(--accent-lt); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+    .btn { padding: 9px 18px; border-radius: var(--radius); border: none; font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--rule); }
 
     /* ── SITTING TIMER ── */
     .timer-widget {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 50;
-      background: white;
-      border: 1.5px solid var(--rule);
-      border-radius: 14px;
-      padding: 16px 20px;
+      position: fixed; bottom: 20px; right: 20px; z-index: 50;
+      background: white; border: 1.5px solid var(--rule);
+      border-radius: 14px; padding: 14px 18px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      min-width: 160px;
-      transition: box-shadow 0.2s;
+      display: flex; flex-direction: column; align-items: center; gap: 9px;
+      min-width: 155px;
     }
-    .timer-widget.ringing {
-      border-color: var(--accent2);
-      box-shadow: 0 0 0 4px rgba(212,168,71,0.25), 0 8px 32px rgba(0,0,0,0.12);
-      animation: ring-pulse 0.6s ease-in-out infinite alternate;
-    }
-    @keyframes ring-pulse {
-      from { transform: scale(1); }
-      to   { transform: scale(1.03); }
-    }
-    .timer-label {
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
-      color: var(--muted);
-      font-weight: 500;
-    }
-    .timer-display {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 2rem;
-      font-weight: 500;
-      color: var(--ink);
-      line-height: 1;
-    }
+    .timer-widget.ringing { border-color: var(--accent2); box-shadow: 0 0 0 4px rgba(212,168,71,0.25), 0 8px 32px rgba(0,0,0,0.12); animation: ring-pulse 0.6s ease-in-out infinite alternate; }
+    @keyframes ring-pulse { from { transform: scale(1); } to { transform: scale(1.03); } }
+    .timer-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); font-weight: 500; }
+    .timer-display { font-family: 'JetBrains Mono', monospace; font-size: 1.9rem; font-weight: 500; color: var(--ink); line-height: 1; }
     .timer-display.warn { color: var(--accent2); }
     .timer-display.done { color: var(--accent); }
-    .timer-ring-msg {
-      display: none;
-      font-size: 0.78rem;
-      color: var(--accent2);
-      font-weight: 500;
-      text-align: center;
-      line-height: 1.3;
-    }
+    .timer-ring-msg { display: none; font-size: 0.76rem; color: var(--accent2); font-weight: 500; text-align: center; }
     .timer-ring-msg.visible { display: block; }
-    .timer-btns { display: flex; gap: 7px; }
-    .timer-btn {
-      padding: 5px 12px;
-      border-radius: 5px;
-      border: 1.5px solid var(--rule);
-      font-family: 'Inter', sans-serif;
-      font-size: 0.75rem;
-      font-weight: 500;
-      cursor: pointer;
-      background: white;
-      color: var(--ink);
-      transition: background 0.12s, border-color 0.12s;
-    }
+    .timer-btns { display: flex; gap: 6px; }
+    .timer-btn { padding: 5px 10px; border-radius: 5px; border: 1.5px solid var(--rule); font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 500; cursor: pointer; background: white; color: var(--ink); transition: background 0.12s; }
     .timer-btn:hover { background: var(--paper); border-color: var(--accent); }
-    .timer-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
-    .timer-btn.primary:hover { opacity: 0.85; }
-    .timer-toggle {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 51;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 48px; height: 48px;
-      font-size: 1.3rem;
-      cursor: pointer;
-      box-shadow: 0 4px 16px rgba(26,107,74,0.35);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.15s;
-    }
-    .timer-toggle:hover { opacity: 0.85; }
+    .timer-fab { position: fixed; bottom: 20px; right: 20px; z-index: 51; background: var(--accent); color: white; border: none; border-radius: 50%; width: 46px; height: 46px; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 16px rgba(26,107,74,0.35); display: none; align-items: center; justify-content: center; }
 
     /* confetti */
     .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; overflow: hidden; }
@@ -318,104 +309,133 @@
     @keyframes confetti-fall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
 
     @media (max-width: 600px) {
-      header { padding: 16px; }
       .stats { flex-wrap: wrap; }
       .stat { flex: 1 1 50%; border-bottom: 1px solid var(--rule); }
-      main { padding: 20px 12px 60px; }
+      main { padding: 18px 12px 80px; }
       .grid { grid-template-columns: repeat(9, 1fr); gap: 5px; }
+      .stat-value { font-size: 1.5rem; }
     }
-    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
   </style>
 </head>
 <body>
 
-<!-- ══ DASHBOARD ══════════════════════════════════════════════════════ -->
-<div id="dashboardView">
-  <h1 class="page-title">90-Day <em>Challenges</em></h1>
-  <p class="page-subtitle">Pick a challenge below or create a new one.</p>
+<!-- ══ DRAWER SCRIM ══ -->
+<div class="drawer-scrim" id="drawerScrim" onclick="closeDrawer()"></div>
 
-  <div class="challenge-list" id="challengeList"></div>
-
-  <button class="new-btn" onclick="openNewModal()">
-    <span style="font-size:1.1rem">＋</span> New Challenge
-  </button>
-</div>
-
-<!-- ══ TRACKER ════════════════════════════════════════════════════════ -->
-<div id="trackerView">
-  <header>
-    <button class="back-btn" onclick="showDashboard()">← All challenges</button>
-    <span class="header-emoji" id="hEmoji"></span>
-    <div>
-      <div class="header-title" id="hTitle"></div>
-      <div class="header-date" id="hDate"></div>
-    </div>
-  </header>
-
-  <div class="stats">
-    <div class="stat"><div class="stat-value" id="statStreak">0</div><div class="stat-label">Current Streak</div></div>
-    <div class="stat"><div class="stat-value" id="statChecked">0</div><div class="stat-label">Days Done</div></div>
-    <div class="stat"><div class="stat-value amber" id="statLeft">90</div><div class="stat-label">Remaining</div></div>
-    <div class="stat"><div class="stat-value" id="statPct">0%</div><div class="stat-label">Progress</div></div>
+<!-- ══ DRAWER ══ -->
+<nav class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="drawer-logo">90-Day <em>Challenges</em></div>
+    <div class="drawer-tagline">Your personal tracker</div>
   </div>
 
-  <main>
-    <div class="milestone" id="milestoneBanner">
-      <span class="milestone-icon" id="milestoneIcon">🏆</span>
-      <div class="milestone-text"><strong id="milestoneTitle"></strong><span id="milestoneDesc"></span></div>
+  <div class="drawer-nav" id="drawerNav">
+    <div class="drawer-section-label">Challenges</div>
+    <div id="drawerChallengeList"><!-- populated by JS --></div>
+    <div class="drawer-divider"></div>
+    <div class="nav-item" onclick="drawerNewChallenge()">
+      <span class="nav-icon">＋</span>
+      <span class="nav-label">New Challenge</span>
     </div>
+    <div class="drawer-divider"></div>
+    <div class="nav-item" onclick="drawerTimerToggle()">
+      <span class="nav-icon">⏱</span>
+      <span class="nav-label" id="drawerTimerLabel">Sitting Timer</span>
+    </div>
+  </div>
 
-    <div class="section-header">
-      <span class="section-title">90-Day Calendar</span>
-      <span class="section-hint">Click a day to mark it ✓</span>
-    </div>
+  <div class="drawer-footer">
+    <button class="drawer-footer-btn" onclick="drawerExport()">
+      <span>⬇</span> Export current data
+    </button>
+  </div>
+</nav>
 
-    <div class="progress-wrap">
-      <div class="progress-meta"><span id="progressLabel">Day 1 of 90</span><span id="progressPct">0%</span></div>
-      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-    </div>
-
-    <div class="grid" id="dayGrid"></div>
-
-    <div class="section-header" style="margin-top:8px;">
-      <span class="section-title">Daily Notes</span>
-      <span class="section-hint">How are you feeling?</span>
-    </div>
-    <div class="journal-controls">
-      <input type="text" class="note-input" id="noteInput" placeholder="Log a thought or win for today…" maxlength="200" />
-      <button class="btn btn-primary" onclick="addNote()">Save</button>
-    </div>
-    <div class="log-list" id="logList"></div>
-
-    <div class="bottom-actions">
-      <span class="bottom-note">Data stored locally in your browser.</span>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-ghost" onclick="exportData()">Export JSON</button>
-      </div>
-    </div>
-  </main>
+<!-- ══ TOP APP BAR ══ -->
+<div class="topbar">
+  <button class="hamburger" id="hamburger" onclick="openDrawer()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <span class="topbar-emoji" id="topbarEmoji" style="display:none"></span>
+  <div class="topbar-title" id="topbarTitle">My Challenges</div>
 </div>
 
-<!-- ══ NEW CHALLENGE MODAL ════════════════════════════════════════════ -->
+<!-- ══ SCROLLABLE CONTENT ══ -->
+<div class="content-wrap">
+
+  <!-- DASHBOARD -->
+  <div id="dashboardView">
+    <div style="max-width:680px;margin:0 auto;padding:28px 20px 80px;">
+      <h1 class="dash-heading">My <em>Challenges</em></h1>
+      <p class="dash-sub">Track any 90-day commitment. Tap a challenge to open it.</p>
+      <div class="challenge-list" id="challengeList"></div>
+      <button class="new-btn" onclick="openNewModal()">
+        <span style="font-size:1.05rem">＋</span> New Challenge
+      </button>
+    </div>
+  </div>
+
+  <!-- TRACKER -->
+  <div id="trackerView">
+    <div class="stats">
+      <div class="stat"><div class="stat-value" id="statStreak">0</div><div class="stat-label">Streak</div></div>
+      <div class="stat"><div class="stat-value" id="statChecked">0</div><div class="stat-label">Done</div></div>
+      <div class="stat"><div class="stat-value amber" id="statLeft">90</div><div class="stat-label">Left</div></div>
+      <div class="stat"><div class="stat-value" id="statPct">0%</div><div class="stat-label">Progress</div></div>
+    </div>
+
+    <main>
+      <div class="milestone" id="milestoneBanner">
+        <span class="milestone-icon" id="milestoneIcon">🏆</span>
+        <div class="milestone-text"><strong id="milestoneTitle"></strong><span id="milestoneDesc"></span></div>
+      </div>
+
+      <div class="section-header">
+        <span class="section-title">90-Day Calendar</span>
+        <span class="section-hint">Tap a day to check it off</span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-meta"><span id="progressLabel">Day 1 of 90</span><span id="progressPct">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+      <div class="grid" id="dayGrid"></div>
+
+      <div class="section-header" style="margin-top:6px;">
+        <span class="section-title">Daily Notes</span>
+        <span class="section-hint">How are you feeling?</span>
+      </div>
+      <div class="journal-controls">
+        <input type="text" class="note-input" id="noteInput" placeholder="Log a thought or win for today…" maxlength="200" />
+        <button class="btn btn-primary" onclick="addNote()">Save</button>
+      </div>
+      <div class="log-list" id="logList"></div>
+
+      <div class="bottom-actions">
+        <span class="bottom-note">Stored locally in your browser.</span>
+        <button class="btn btn-ghost" onclick="exportData()">Export JSON</button>
+      </div>
+    </main>
+  </div>
+
+</div><!-- /content-wrap -->
+
+<!-- ══ NEW CHALLENGE MODAL ══ -->
 <div class="modal-overlay" id="newModal">
   <div class="modal">
     <div class="modal-title">New 90-Day Challenge</div>
-
     <div class="form-row">
       <label class="form-label">Challenge name</label>
       <input class="form-input" id="newName" placeholder="e.g. No alcohol, Daily meditation, 10k steps…" maxlength="60" />
     </div>
-
     <div class="form-row">
       <label class="form-label">Pick an emoji</label>
       <div class="emoji-picker" id="emojiPicker"></div>
     </div>
-
     <div class="form-row">
       <label class="form-label">Start date</label>
       <input class="form-input" type="date" id="newStart" />
     </div>
-
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeNewModal()">Cancel</button>
       <button class="btn btn-primary" onclick="createChallenge()">Start challenge</button>
@@ -423,7 +443,7 @@
   </div>
 </div>
 
-<!-- ── SITTING TIMER WIDGET ── -->
+<!-- ══ SITTING TIMER ══ -->
 <div class="timer-widget" id="timerWidget">
   <span class="timer-label">🪑 Sitting Timer</span>
   <div class="timer-display" id="timerDisplay">30:00</div>
@@ -431,113 +451,136 @@
   <div class="timer-btns">
     <button class="timer-btn" id="timerStartStop" onclick="timerToggle()">Start</button>
     <button class="timer-btn" onclick="timerReset()">Reset</button>
-    <button class="timer-btn" onclick="timerHide()" title="Minimise">—</button>
+    <button class="timer-btn" onclick="timerHide()">—</button>
   </div>
 </div>
-
-<button class="timer-toggle" id="timerToggleBtn" onclick="timerShow()" title="Sitting Timer">⏱</button>
+<button class="timer-fab" id="timerFab" onclick="timerShow()" title="Sitting Timer">⏱</button>
 
 <div class="confetti-container" id="confettiContainer"></div>
 
 <script>
-// ── CONSTANTS ──────────────────────────────────────────────────────────
-const TOTAL = 90;
+// ── CONSTANTS ─────────────────────────────────────────────────────────
+const TOTAL  = 90;
 const STORE  = 'habit90_v2';
 const EMOJIS = ['🚫','🏃','🧘','💪','📚','✍️','🥗','💧','😴','🎯','🧠','🌿','🎸','🖥️','❤️','🏋️','🚴','🌅','🍎','🛑'];
 const MILESTONES = [
-  { day:1,  icon:'🌱', title:'Day 1 done!',           desc:'Every journey starts with a single step.' },
-  { day:3,  icon:'✨', title:'3-day streak!',          desc:'Momentum is building.' },
-  { day:7,  icon:'🗓️', title:'One full week!',         desc:'Your body and mind are already adapting.' },
-  { day:14, icon:'💪', title:'Two weeks strong',       desc:'Mental clarity is sharpening.' },
-  { day:21, icon:'🔥', title:'21 days — habit forming',desc:'Research says 21 days to form a habit.' },
-  { day:30, icon:'🏅', title:'30-day milestone',       desc:'One month down. That\'s huge.' },
-  { day:60, icon:'🌟', title:'60 days!',               desc:'Two-thirds of the way there.' },
-  { day:90, icon:'🏆', title:'CHALLENGE COMPLETE!',    desc:'90 days. You did it!' },
+  { day:1,  icon:'🌱', title:'Day 1 done!',            desc:'Every journey starts with a single step.' },
+  { day:3,  icon:'✨', title:'3-day streak!',           desc:'Momentum is building.' },
+  { day:7,  icon:'🗓️', title:'One full week!',          desc:'Your body and mind are already adapting.' },
+  { day:14, icon:'💪', title:'Two weeks strong',        desc:'Mental clarity is sharpening.' },
+  { day:21, icon:'🔥', title:'21 days — habit forming', desc:'Research says 21 days to form a habit.' },
+  { day:30, icon:'🏅', title:'30-day milestone',        desc:"One month down. That's huge." },
+  { day:60, icon:'🌟', title:'60 days!',                desc:'Two-thirds of the way there.' },
+  { day:90, icon:'🏆', title:'CHALLENGE COMPLETE!',     desc:'90 days. You did it!' },
 ];
 
-// ── STORAGE ────────────────────────────────────────────────────────────
+// ── STORAGE ───────────────────────────────────────────────────────────
 function load() {
   try { const r = localStorage.getItem(STORE); if (r) return JSON.parse(r); } catch {}
   return { challenges: [] };
 }
 function save(db) { localStorage.setItem(STORE, JSON.stringify(db)); }
-
 let db = load();
-let activeId = null;  // currently open challenge id
-
+let activeId = null;
 function getChallenge(id) { return db.challenges.find(c => c.id === id); }
 
-// ── UTILS ──────────────────────────────────────────────────────────────
+// ── UTILS ─────────────────────────────────────────────────────────────
 function todayStr() { return new Date().toISOString().slice(0,10); }
-
-function dateOfDay(startDate, n) {
-  const d = new Date(startDate);
-  d.setDate(d.getDate() + n - 1);
+function dateOfDay(start, n) {
+  const d = new Date(start); d.setDate(d.getDate() + n - 1);
   return d.toISOString().slice(0,10);
 }
-
-function currentDayIndex(startDate) {
-  const start  = new Date(startDate);
-  const today  = new Date(todayStr());
-  return Math.round((today - start) / 86400000) + 1;
+function currentDayIndex(start) {
+  return Math.round((new Date(todayStr()) - new Date(start)) / 86400000) + 1;
 }
-
 function formatShort(str) {
   return new Date(str + 'T00:00:00').toLocaleDateString('en-IN', { day:'numeric', month:'short' });
 }
-
-function calcStreak(challenge) {
-  const today = currentDayIndex(challenge.startDate);
+function calcStreak(c) {
+  const today = currentDayIndex(c.startDate);
   let s = 0;
-  for (let i = Math.min(today, TOTAL); i >= 1; i--) {
-    if (challenge.checked[i]) s++; else break;
-  }
+  for (let i = Math.min(today, TOTAL); i >= 1; i--) { if (c.checked[i]) s++; else break; }
   return s;
 }
-
 function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── DASHBOARD ──────────────────────────────────────────────────────────
+// ── DRAWER ────────────────────────────────────────────────────────────
+function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerScrim').classList.add('open');
+  renderDrawerList();
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerScrim').classList.remove('open');
+}
+function drawerNewChallenge() { closeDrawer(); openNewModal(); }
+function drawerExport() { closeDrawer(); if (activeId) exportData(); }
+function drawerTimerToggle() {
+  closeDrawer();
+  const w = document.getElementById('timerWidget');
+  if (w.style.display === 'none') timerShow(); else timerHide();
+}
+
+function renderDrawerList() {
+  const el = document.getElementById('drawerChallengeList');
+  if (db.challenges.length === 0) {
+    el.innerHTML = `<div style="padding:8px 20px;font-size:0.78rem;color:rgba(255,255,255,0.25);font-style:italic;">No challenges yet</div>`;
+    return;
+  }
+  el.innerHTML = db.challenges.map(c => {
+    const checked = Object.values(c.checked||{}).filter(Boolean).length;
+    const pct = Math.round((checked / TOTAL) * 100);
+    const isActive = c.id === activeId;
+    return `<div class="nav-item${isActive?' active':''}" onclick="drawerOpenChallenge('${c.id}')">
+      <span class="nav-icon">${c.emoji}</span>
+      <span class="nav-label">${escHtml(c.name)}</span>
+      <span class="nav-pct">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+function drawerOpenChallenge(id) {
+  closeDrawer();
+  openChallenge(id);
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────
 function showDashboard() {
-  document.getElementById('dashboardView').style.display = '';
-  document.getElementById('trackerView').style.display   = 'none';
   activeId = null;
+  document.getElementById('dashboardView').style.display = 'block';
+  document.getElementById('trackerView').style.display   = 'none';
+  document.getElementById('topbarTitle').textContent     = 'My Challenges';
+  document.getElementById('topbarEmoji').style.display   = 'none';
   renderDashboard();
 }
 
 function renderDashboard() {
   const list = document.getElementById('challengeList');
-
   if (db.challenges.length === 0) {
-    list.innerHTML = `
-      <div class="empty-state">
-        <div class="big">🎯</div>
-        <p>No challenges yet.<br>Create your first 90-day challenge below.</p>
-      </div>`;
+    list.innerHTML = `<div class="empty-state"><div class="big">🎯</div><p>No challenges yet.<br>Create your first 90-day challenge below.</p></div>`;
     return;
   }
-
   list.innerHTML = db.challenges.map(c => {
-    const checked = Object.values(c.checked||{}).filter(Boolean).length;
-    const pct     = Math.round((checked / TOTAL) * 100);
-    const streak  = calcStreak(c);
+    const checked  = Object.values(c.checked||{}).filter(Boolean).length;
+    const pct      = Math.round((checked / TOTAL) * 100);
+    const streak   = calcStreak(c);
     const todayIdx = currentDayIndex(c.startDate);
-    const status  = todayIdx > TOTAL ? 'Completed' : `Day ${Math.min(Math.max(todayIdx,1),TOTAL)} of ${TOTAL}`;
-    return `
-      <div class="challenge-card" onclick="openChallenge('${c.id}')">
-        <span class="card-emoji">${c.emoji}</span>
-        <div class="card-body">
-          <div class="card-name">${escHtml(c.name)}</div>
-          <div class="card-meta">${status} · ${streak} day streak · Started ${formatShort(c.startDate)}</div>
-        </div>
-        <div class="card-progress-wrap">
-          <div class="card-pct">${pct}%</div>
-          <div class="card-bar"><div class="card-bar-fill" style="width:${pct}%"></div></div>
-        </div>
-        <button class="card-delete" onclick="deleteChallenge(event,'${c.id}')" title="Delete">✕</button>
-      </div>`;
+    const status   = todayIdx > TOTAL ? 'Completed' : `Day ${Math.min(Math.max(todayIdx,1),TOTAL)} of ${TOTAL}`;
+    return `<div class="challenge-card" onclick="openChallenge('${c.id}')">
+      <span class="card-emoji">${c.emoji}</span>
+      <div class="card-body">
+        <div class="card-name">${escHtml(c.name)}</div>
+        <div class="card-meta">${status} · ${streak} day streak · Started ${formatShort(c.startDate)}</div>
+      </div>
+      <div class="card-progress-wrap">
+        <div class="card-pct">${pct}%</div>
+        <div class="card-bar"><div class="card-bar-fill" style="width:${pct}%"></div></div>
+      </div>
+      <button class="card-delete" onclick="deleteChallenge(event,'${c.id}')" title="Delete">✕</button>
+    </div>`;
   }).join('');
 }
 
@@ -547,23 +590,19 @@ function deleteChallenge(e, id) {
   if (!confirm(`Delete "${c.name}"? This cannot be undone.`)) return;
   db.challenges = db.challenges.filter(x => x.id !== id);
   save(db);
-  renderDashboard();
+  if (activeId === id) showDashboard(); else renderDashboard();
 }
 
-// ── NEW CHALLENGE MODAL ────────────────────────────────────────────────
+// ── NEW CHALLENGE MODAL ───────────────────────────────────────────────
 let selectedEmoji = EMOJIS[0];
 
 function openNewModal() {
   selectedEmoji = EMOJIS[0];
   document.getElementById('newName').value  = '';
   document.getElementById('newStart').value = todayStr();
-
-  // Build emoji picker
-  const picker = document.getElementById('emojiPicker');
-  picker.innerHTML = EMOJIS.map(e =>
+  document.getElementById('emojiPicker').innerHTML = EMOJIS.map(e =>
     `<button class="emoji-opt${e===selectedEmoji?' selected':''}" onclick="selectEmoji('${e}',this)">${e}</button>`
   ).join('');
-
   document.getElementById('newModal').classList.add('open');
   setTimeout(() => document.getElementById('newName').focus(), 50);
 }
@@ -573,100 +612,70 @@ function selectEmoji(e, btn) {
   document.querySelectorAll('.emoji-opt').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
 }
-
-function closeNewModal() {
-  document.getElementById('newModal').classList.remove('open');
-}
+function closeNewModal() { document.getElementById('newModal').classList.remove('open'); }
 
 function createChallenge() {
   const name  = document.getElementById('newName').value.trim();
   const start = document.getElementById('newStart').value;
-  if (!name) { document.getElementById('newName').focus(); return; }
+  if (!name)  { document.getElementById('newName').focus(); return; }
   if (!start) { document.getElementById('newStart').focus(); return; }
-
-  const challenge = {
-    id:        Date.now().toString(36),
-    name,
-    emoji:     selectedEmoji,
-    startDate: start,
-    checked:   {},
-    notes:     [],
-  };
-
-  db.challenges.push(challenge);
+  const c = { id: Date.now().toString(36), name, emoji: selectedEmoji, startDate: start, checked: {}, notes: [] };
+  db.challenges.push(c);
   save(db);
   closeNewModal();
-  openChallenge(challenge.id);
+  openChallenge(c.id);
 }
 
-// ── TRACKER ────────────────────────────────────────────────────────────
+// ── TRACKER ───────────────────────────────────────────────────────────
 function openChallenge(id) {
   activeId = id;
+  const c  = getChallenge(id);
   document.getElementById('dashboardView').style.display = 'none';
   document.getElementById('trackerView').style.display   = 'block';
+  document.getElementById('topbarTitle').textContent     = c.name;
+  document.getElementById('topbarEmoji').textContent     = c.emoji;
+  document.getElementById('topbarEmoji').style.display   = 'inline';
   renderTracker();
-  document.getElementById('noteInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') addNote();
-  });
+  // Wire up Enter key for notes
+  const ni = document.getElementById('noteInput');
+  ni.onkeydown = e => { if (e.key === 'Enter') addNote(); };
 }
 
 function renderTracker() {
-  const c = getChallenge(activeId);
-  if (!c) return;
+  const c        = getChallenge(activeId);
+  const todayIdx = currentDayIndex(c.startDate);
+  const checked  = Object.values(c.checked||{}).filter(Boolean).length;
+  const pct      = Math.round((checked / TOTAL) * 100);
+  const streak   = calcStreak(c);
 
-  const todayIdx  = currentDayIndex(c.startDate);
-  const checked   = Object.values(c.checked||{}).filter(Boolean).length;
-  const remaining = Math.max(0, TOTAL - checked);
-  const pct       = Math.round((checked / TOTAL) * 100);
-  const streak    = calcStreak(c);
-
-  // Header
-  document.getElementById('hEmoji').textContent  = c.emoji;
-  document.getElementById('hTitle').textContent  = c.name;
-  document.getElementById('hDate').textContent   = `Started ${formatShort(c.startDate)}`;
-
-  // Stats
   document.getElementById('statStreak').textContent  = streak;
   document.getElementById('statChecked').textContent = checked;
-  document.getElementById('statLeft').textContent    = remaining;
+  document.getElementById('statLeft').textContent    = Math.max(0, TOTAL - checked);
   document.getElementById('statPct').textContent     = pct + '%';
 
-  // Progress bar
-  const clampedDay = Math.min(Math.max(todayIdx, 1), TOTAL);
-  document.getElementById('progressLabel').textContent  = `Day ${clampedDay} of ${TOTAL}`;
-  document.getElementById('progressPct').textContent    = pct + '%';
-  document.getElementById('progressFill').style.width   = pct + '%';
+  const clamp = Math.min(Math.max(todayIdx,1), TOTAL);
+  document.getElementById('progressLabel').textContent = `Day ${clamp} of ${TOTAL}`;
+  document.getElementById('progressPct').textContent   = pct + '%';
+  document.getElementById('progressFill').style.width  = pct + '%';
 
-  // Grid
   renderGrid(c, todayIdx);
-
-  // Milestone
   renderMilestone(c, todayIdx);
-
-  // Log
   renderLog(c);
 }
 
 function renderGrid(c, todayIdx) {
   const grid = document.getElementById('dayGrid');
   grid.innerHTML = '';
-
   for (let i = 1; i <= TOTAL; i++) {
-    const dateStr   = dateOfDay(c.startDate, i);
     const isChecked = !!c.checked[i];
     const isToday   = i === todayIdx;
     const isFuture  = i > todayIdx;
-
     const cell = document.createElement('div');
     cell.className = 'day-cell'
       + (isChecked ? ' checked' : '')
       + (isToday   ? ' today'   : '')
       + (isFuture  ? ' future'  : '');
-
-    cell.innerHTML = `
-      <span class="day-num">${i}</span>
-      <span class="tooltip">${formatShort(dateStr)}${isChecked?' · ✓':isToday?' · Today':''}</span>`;
-
+    cell.innerHTML = `<span class="day-num">${i}</span><span class="tooltip">${formatShort(dateOfDay(c.startDate,i))}${isChecked?' · ✓':isToday?' · Today':''}</span>`;
     if (!isFuture) cell.addEventListener('click', () => toggleDay(i));
     grid.appendChild(cell);
   }
@@ -674,45 +683,30 @@ function renderGrid(c, todayIdx) {
 
 function renderMilestone(c, todayIdx) {
   let latest = null;
-  for (const m of MILESTONES) {
-    if (m.day <= todayIdx && c.checked[m.day]) latest = m;
-  }
+  for (const m of MILESTONES) { if (m.day <= todayIdx && c.checked[m.day]) latest = m; }
   const banner = document.getElementById('milestoneBanner');
   if (latest) {
     document.getElementById('milestoneIcon').textContent  = latest.icon;
     document.getElementById('milestoneTitle').textContent = latest.title;
     document.getElementById('milestoneDesc').textContent  = latest.desc;
     banner.classList.add('visible');
-  } else {
-    banner.classList.remove('visible');
-  }
+  } else { banner.classList.remove('visible'); }
 }
 
 function renderLog(c) {
   const list = document.getElementById('logList');
-  if (!c.notes || c.notes.length === 0) {
-    list.innerHTML = '<div class="empty-log">No notes yet — start logging your wins.</div>';
-    return;
-  }
-  const sorted = [...c.notes].sort((a,b) => b.day - a.day);
-  list.innerHTML = sorted.map(n => `
-    <div class="log-entry">
-      <span class="log-day-badge">Day ${n.day}</span>
-      <span class="log-text">${escHtml(n.text)}</span>
-      <span class="log-date">${formatShort(n.date)}</span>
-    </div>`).join('');
+  if (!c.notes || !c.notes.length) { list.innerHTML = '<div class="empty-log">No notes yet — start logging your wins.</div>'; return; }
+  list.innerHTML = [...c.notes].sort((a,b) => b.day-a.day).map(n =>
+    `<div class="log-entry"><span class="log-day-badge">Day ${n.day}</span><span class="log-text">${escHtml(n.text)}</span><span class="log-date">${formatShort(n.date)}</span></div>`
+  ).join('');
 }
 
 function toggleDay(n) {
   const c = getChallenge(activeId);
-  const wasChecked = !!c.checked[n];
-  c.checked[n] = !wasChecked;
+  c.checked[n] = !c.checked[n];
   save(db);
   renderTracker();
-  if (!wasChecked) {
-    const isMilestone = MILESTONES.some(m => m.day === n);
-    isMilestone ? bigBurst() : burst();
-  }
+  if (c.checked[n]) { MILESTONES.some(m => m.day === n) ? bigBurst() : burst(); }
 }
 
 function addNote() {
@@ -729,159 +723,114 @@ function addNote() {
 }
 
 function exportData() {
-  const c    = getChallenge(activeId);
-  const blob = new Blob([JSON.stringify(c, null, 2)], { type: 'application/json' });
+  const c    = activeId ? getChallenge(activeId) : db;
+  const blob = new Blob([JSON.stringify(c, null, 2)], { type:'application/json' });
   const a    = document.createElement('a');
   a.href     = URL.createObjectURL(blob);
-  a.download = `${c.name.replace(/\s+/g,'-')}_${todayStr()}.json`;
+  a.download = `${activeId ? c.name.replace(/\s+/g,'-') : 'all-challenges'}_${todayStr()}.json`;
   a.click();
 }
 
 // ── SITTING TIMER ─────────────────────────────────────────────────────
-const SIT_DURATION = 30 * 60; // 30 minutes in seconds
-let sitSecondsLeft = SIT_DURATION;
-let sitInterval    = null;
-let sitRunning     = false;
-let audioCtx       = null;
+const SIT_DURATION = 30 * 60;
+let sitSecondsLeft = SIT_DURATION, sitInterval = null, sitRunning = false, audioCtx = null;
 
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
-
 function playAlertSound() {
   try {
     const ctx = getAudioCtx();
-    // Three ascending tones
-    [523, 659, 784].forEach((freq, i) => {
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.value = freq;
+    [523,659,784].forEach((freq,i) => {
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine'; osc.frequency.value = freq;
       const t = ctx.currentTime + i * 0.18;
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.4, t + 0.05);
-      gain.gain.linearRampToValueAtTime(0, t + 0.28);
-      osc.start(t);
-      osc.stop(t + 0.3);
+      gain.gain.setValueAtTime(0,t); gain.gain.linearRampToValueAtTime(0.4,t+0.05); gain.gain.linearRampToValueAtTime(0,t+0.28);
+      osc.start(t); osc.stop(t+0.3);
     });
-  } catch(e) { console.warn('Audio error:', e); }
+  } catch(e) {}
 }
-
 function timerTick() {
   if (sitSecondsLeft <= 0) {
-    // Ring!
-    playAlertSound();
-    setTimeout(playAlertSound, 900);
-    setTimeout(playAlertSound, 1800);
+    playAlertSound(); setTimeout(playAlertSound,900); setTimeout(playAlertSound,1800);
     document.getElementById('timerWidget').classList.add('ringing');
     document.getElementById('timerRingMsg').classList.add('visible');
     document.getElementById('timerStartStop').textContent = 'Restart';
     document.getElementById('timerDisplay').className = 'timer-display done';
     document.getElementById('timerDisplay').textContent = '00:00';
-    sitRunning = false;
-    clearInterval(sitInterval);
-    sitInterval = null;
-    // Show widget if hidden
+    sitRunning = false; clearInterval(sitInterval); sitInterval = null;
     timerShow();
+    document.getElementById('drawerTimerLabel').textContent = 'Sitting Timer 🔔';
     return;
   }
   sitSecondsLeft--;
   updateTimerDisplay();
 }
-
 function updateTimerDisplay() {
-  const m = Math.floor(sitSecondsLeft / 60).toString().padStart(2, '0');
-  const s = (sitSecondsLeft % 60).toString().padStart(2, '0');
+  const m = Math.floor(sitSecondsLeft/60).toString().padStart(2,'0');
+  const s = (sitSecondsLeft%60).toString().padStart(2,'0');
   const el = document.getElementById('timerDisplay');
   el.textContent = `${m}:${s}`;
   el.className = 'timer-display' + (sitSecondsLeft <= 60 ? ' warn' : '');
 }
-
 function timerToggle() {
-  // Unlock audio on first user gesture
   try { getAudioCtx().resume(); } catch(e) {}
-
-  if (sitSecondsLeft <= 0) {
-    // Was done — restart
-    timerReset();
-    timerToggle();
-    return;
-  }
+  if (sitSecondsLeft <= 0) { timerReset(); timerToggle(); return; }
   if (sitRunning) {
-    clearInterval(sitInterval);
-    sitInterval = null;
-    sitRunning  = false;
+    clearInterval(sitInterval); sitInterval = null; sitRunning = false;
     document.getElementById('timerStartStop').textContent = 'Resume';
   } else {
-    sitInterval = setInterval(timerTick, 1000);
-    sitRunning  = true;
+    sitInterval = setInterval(timerTick, 1000); sitRunning = true;
     document.getElementById('timerStartStop').textContent = 'Pause';
     document.getElementById('timerWidget').classList.remove('ringing');
     document.getElementById('timerRingMsg').classList.remove('visible');
+    document.getElementById('drawerTimerLabel').textContent = 'Sitting Timer ▶';
   }
 }
-
 function timerReset() {
-  clearInterval(sitInterval);
-  sitInterval    = null;
-  sitRunning     = false;
+  clearInterval(sitInterval); sitInterval = null; sitRunning = false;
   sitSecondsLeft = SIT_DURATION;
   document.getElementById('timerStartStop').textContent = 'Start';
   document.getElementById('timerDisplay').className = 'timer-display';
   document.getElementById('timerWidget').classList.remove('ringing');
   document.getElementById('timerRingMsg').classList.remove('visible');
+  document.getElementById('drawerTimerLabel').textContent = 'Sitting Timer';
   updateTimerDisplay();
 }
-
 function timerHide() {
-  document.getElementById('timerWidget').style.display    = 'none';
-  document.getElementById('timerToggleBtn').style.display = 'flex';
+  document.getElementById('timerWidget').style.display = 'none';
+  document.getElementById('timerFab').style.display    = 'flex';
 }
-
 function timerShow() {
-  document.getElementById('timerWidget').style.display    = 'flex';
-  document.getElementById('timerToggleBtn').style.display = 'none';
+  document.getElementById('timerWidget').style.display = 'flex';
+  document.getElementById('timerFab').style.display    = 'none';
 }
 
-// ── CONFETTI ─────────────────────────────────────────────────────────
-const COLORS = ['#1a6b4a','#d4a847','#2d9e6e','#f7f4ef','#0f1117'];
-function spawnConfetti(n) {
-  const container = document.getElementById('confettiContainer');
-  for (let i = 0; i < n; i++) {
-    const el = document.createElement('div');
-    el.className = 'confetti-piece';
-    el.style.cssText = `left:${Math.random()*100}%;top:-10px;background:${COLORS[Math.floor(Math.random()*COLORS.length)]};animation-delay:${Math.random()*0.5}s;animation-duration:${1+Math.random()*0.8}s;transform:rotate(${Math.random()*360}deg)`;
-    container.appendChild(el);
-    el.addEventListener('animationend', () => el.remove());
-  }
-}
-function burst()    { spawnConfetti(18); }
-function bigBurst() { spawnConfetti(60); }
+// ── SWIPE TO OPEN DRAWER ──────────────────────────────────────────────
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive:true });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (touchStartX < 30 && dx > 60) openDrawer();
+  if (dx < -60 && document.getElementById('drawer').classList.contains('open')) closeDrawer();
+}, { passive:true });
 
-// ── MIGRATE old v1 data ────────────────────────────────────────────────
-(function migrateV1() {
+// ── MIGRATE v1 ────────────────────────────────────────────────────────
+(function() {
   const old = localStorage.getItem('habit90_v1');
   if (!old) return;
   try {
     const d = JSON.parse(old);
     if (d.startDate && !db.challenges.find(c => c.name === 'Alcohol Free')) {
-      db.challenges.unshift({
-        id: 'migrated',
-        name: 'Alcohol Free',
-        emoji: '🚫',
-        startDate: d.startDate,
-        checked: d.checked || {},
-        notes: d.notes || [],
-      });
+      db.challenges.unshift({ id:'migrated', name:'Alcohol Free', emoji:'🚫', startDate:d.startDate, checked:d.checked||{}, notes:d.notes||[] });
       save(db);
     }
   } catch {}
 })();
 
-// ── INIT ────────────────────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────────────
 showDashboard();
 </script>
 </body>
