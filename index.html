@@ -224,6 +224,94 @@
     .bottom-actions { margin-top: 52px; padding-top: 20px; border-top: 1px solid var(--rule); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
     .bottom-note { font-size: 0.75rem; color: var(--muted); }
 
+    /* ── SITTING TIMER ── */
+    .timer-widget {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 50;
+      background: white;
+      border: 1.5px solid var(--rule);
+      border-radius: 14px;
+      padding: 16px 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      min-width: 160px;
+      transition: box-shadow 0.2s;
+    }
+    .timer-widget.ringing {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 4px rgba(212,168,71,0.25), 0 8px 32px rgba(0,0,0,0.12);
+      animation: ring-pulse 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes ring-pulse {
+      from { transform: scale(1); }
+      to   { transform: scale(1.03); }
+    }
+    .timer-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .timer-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2rem;
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1;
+    }
+    .timer-display.warn { color: var(--accent2); }
+    .timer-display.done { color: var(--accent); }
+    .timer-ring-msg {
+      display: none;
+      font-size: 0.78rem;
+      color: var(--accent2);
+      font-weight: 500;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .timer-ring-msg.visible { display: block; }
+    .timer-btns { display: flex; gap: 7px; }
+    .timer-btn {
+      padding: 5px 12px;
+      border-radius: 5px;
+      border: 1.5px solid var(--rule);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: white;
+      color: var(--ink);
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .timer-btn:hover { background: var(--paper); border-color: var(--accent); }
+    .timer-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .timer-btn.primary:hover { opacity: 0.85; }
+    .timer-toggle {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 51;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 48px; height: 48px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(26,107,74,0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.15s;
+    }
+    .timer-toggle:hover { opacity: 0.85; }
+
     /* confetti */
     .confetti-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; overflow: hidden; }
     .confetti-piece { position: absolute; width: 8px; height: 8px; border-radius: 2px; animation: confetti-fall 1.4s ease-out forwards; }
@@ -334,6 +422,20 @@
     </div>
   </div>
 </div>
+
+<!-- ── SITTING TIMER WIDGET ── -->
+<div class="timer-widget" id="timerWidget">
+  <span class="timer-label">🪑 Sitting Timer</span>
+  <div class="timer-display" id="timerDisplay">30:00</div>
+  <div class="timer-ring-msg" id="timerRingMsg">Stand up &amp; stretch! 🚶</div>
+  <div class="timer-btns">
+    <button class="timer-btn" id="timerStartStop" onclick="timerToggle()">Start</button>
+    <button class="timer-btn" onclick="timerReset()">Reset</button>
+    <button class="timer-btn" onclick="timerHide()" title="Minimise">—</button>
+  </div>
+</div>
+
+<button class="timer-toggle" id="timerToggleBtn" onclick="timerShow()" title="Sitting Timer">⏱</button>
 
 <div class="confetti-container" id="confettiContainer"></div>
 
@@ -635,7 +737,116 @@ function exportData() {
   a.click();
 }
 
-// ── CONFETTI ────────────────────────────────────────────────────────────
+// ── SITTING TIMER ─────────────────────────────────────────────────────
+const SIT_DURATION = 30 * 60; // 30 minutes in seconds
+let sitSecondsLeft = SIT_DURATION;
+let sitInterval    = null;
+let sitRunning     = false;
+let audioCtx       = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playAlertSound() {
+  try {
+    const ctx = getAudioCtx();
+    // Three ascending tones
+    [523, 659, 784].forEach((freq, i) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.4, t + 0.05);
+      gain.gain.linearRampToValueAtTime(0, t + 0.28);
+      osc.start(t);
+      osc.stop(t + 0.3);
+    });
+  } catch(e) { console.warn('Audio error:', e); }
+}
+
+function timerTick() {
+  if (sitSecondsLeft <= 0) {
+    // Ring!
+    playAlertSound();
+    setTimeout(playAlertSound, 900);
+    setTimeout(playAlertSound, 1800);
+    document.getElementById('timerWidget').classList.add('ringing');
+    document.getElementById('timerRingMsg').classList.add('visible');
+    document.getElementById('timerStartStop').textContent = 'Restart';
+    document.getElementById('timerDisplay').className = 'timer-display done';
+    document.getElementById('timerDisplay').textContent = '00:00';
+    sitRunning = false;
+    clearInterval(sitInterval);
+    sitInterval = null;
+    // Show widget if hidden
+    timerShow();
+    return;
+  }
+  sitSecondsLeft--;
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(sitSecondsLeft / 60).toString().padStart(2, '0');
+  const s = (sitSecondsLeft % 60).toString().padStart(2, '0');
+  const el = document.getElementById('timerDisplay');
+  el.textContent = `${m}:${s}`;
+  el.className = 'timer-display' + (sitSecondsLeft <= 60 ? ' warn' : '');
+}
+
+function timerToggle() {
+  // Unlock audio on first user gesture
+  try { getAudioCtx().resume(); } catch(e) {}
+
+  if (sitSecondsLeft <= 0) {
+    // Was done — restart
+    timerReset();
+    timerToggle();
+    return;
+  }
+  if (sitRunning) {
+    clearInterval(sitInterval);
+    sitInterval = null;
+    sitRunning  = false;
+    document.getElementById('timerStartStop').textContent = 'Resume';
+  } else {
+    sitInterval = setInterval(timerTick, 1000);
+    sitRunning  = true;
+    document.getElementById('timerStartStop').textContent = 'Pause';
+    document.getElementById('timerWidget').classList.remove('ringing');
+    document.getElementById('timerRingMsg').classList.remove('visible');
+  }
+}
+
+function timerReset() {
+  clearInterval(sitInterval);
+  sitInterval    = null;
+  sitRunning     = false;
+  sitSecondsLeft = SIT_DURATION;
+  document.getElementById('timerStartStop').textContent = 'Start';
+  document.getElementById('timerDisplay').className = 'timer-display';
+  document.getElementById('timerWidget').classList.remove('ringing');
+  document.getElementById('timerRingMsg').classList.remove('visible');
+  updateTimerDisplay();
+}
+
+function timerHide() {
+  document.getElementById('timerWidget').style.display    = 'none';
+  document.getElementById('timerToggleBtn').style.display = 'flex';
+}
+
+function timerShow() {
+  document.getElementById('timerWidget').style.display    = 'flex';
+  document.getElementById('timerToggleBtn').style.display = 'none';
+}
+
+// ── CONFETTI ─────────────────────────────────────────────────────────
 const COLORS = ['#1a6b4a','#d4a847','#2d9e6e','#f7f4ef','#0f1117'];
 function spawnConfetti(n) {
   const container = document.getElementById('confettiContainer');
