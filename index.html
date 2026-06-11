@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>90 Days · Alcohol Free</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:      #0f1117;
+      --paper:    #f7f4ef;
+      --muted:    #a09a92;
+      --rule:     #e2ddd7;
+      --accent:   #1a6b4a;       /* deep forest green — sobriety, growth */
+      --accent2:  #d4a847;       /* amber — warmth, the thing you left behind */
+      --checked:  #1a6b4a;
+      --missed:   #e8e2da;
+      --today-bg: #fff8e8;
+      --today-border: #d4a847;
+      --radius:   6px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 1px solid var(--rule);
+      padding: 28px 40px 24px;
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      color: var(--ink);
+      letter-spacing: -0.5px;
+    }
+
+    .brand em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .tagline {
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    /* ── STATS BAR ── */
+    .stats {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--rule);
+      background: white;
+    }
+
+    .stat {
+      flex: 1;
+      padding: 18px 24px;
+      border-right: 1px solid var(--rule);
+      min-width: 0;
+    }
+    .stat:last-child { border-right: none; }
+
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.2rem;
+      font-weight: 500;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .stat-value.amber { color: var(--accent2); }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* ── MAIN ── */
+    main {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 36px 24px 80px;
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      color: var(--ink);
+    }
+
+    .section-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── GRID ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+      margin-bottom: 48px;
+    }
+
+    .day-cell {
+      aspect-ratio: 1;
+      border-radius: var(--radius);
+      border: 1.5px solid var(--rule);
+      background: var(--missed);
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.1s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .day-cell:hover { transform: scale(1.08); border-color: var(--accent); }
+
+    .day-cell.checked {
+      background: var(--checked);
+      border-color: var(--checked);
+    }
+
+    .day-cell.checked::after {
+      content: '✓';
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .day-cell.today {
+      border: 2px solid var(--today-border);
+      background: var(--today-bg);
+      box-shadow: 0 0 0 3px rgba(212, 168, 71, 0.15);
+    }
+
+    .day-cell.today.checked {
+      background: var(--checked);
+      border-color: var(--checked);
+      box-shadow: 0 0 0 3px rgba(26, 107, 74, 0.2);
+    }
+
+    .day-cell.future {
+      opacity: 0.35;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .day-num {
+      position: absolute;
+      top: 3px;
+      left: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      color: var(--muted);
+      line-height: 1;
+    }
+
+    .day-cell.checked .day-num { color: rgba(255,255,255,0.55); }
+
+    /* ── TOOLTIP ── */
+    .day-cell:not(.future):hover .tooltip {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(-4px);
+    }
+
+    .tooltip {
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) translateY(0);
+      background: var(--ink);
+      color: white;
+      font-size: 0.7rem;
+      padding: 5px 9px;
+      border-radius: 4px;
+      white-space: nowrap;
+      transition: opacity 0.15s, transform 0.15s;
+      z-index: 10;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%; left: 50%;
+      transform: translateX(-50%);
+      border: 4px solid transparent;
+      border-top-color: var(--ink);
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-wrap {
+      margin-bottom: 40px;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .progress-track {
+      height: 8px;
+      background: var(--rule);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #2d9e6e);
+      border-radius: 99px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── JOURNAL ── */
+    .journal-section { margin-top: 8px; }
+
+    .journal-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .journal-controls label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-weight: 500;
+    }
+
+    .note-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 9px 14px;
+      border: 1.5px solid var(--rule);
+      border-radius: var(--radius);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      background: white;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .note-input:focus { border-color: var(--accent); }
+    .note-input::placeholder { color: var(--muted); }
+
+    .btn {
+      padding: 9px 18px;
+      border-radius: var(--radius);
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1.5px solid var(--rule);
+    }
+
+    /* ── LOG ENTRIES ── */
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .log-entry {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 12px 16px;
+      background: white;
+      border-radius: var(--radius);
+      border: 1px solid var(--rule);
+    }
+
+    .log-day-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: white;
+      background: var(--accent);
+      padding: 2px 7px;
+      border-radius: 3px;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .log-text {
+      font-size: 0.85rem;
+      color: var(--ink);
+      flex: 1;
+    }
+
+    .log-date {
+      font-size: 0.72rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .empty-log {
+      text-align: center;
+      padding: 32px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      border: 1.5px dashed var(--rule);
+      border-radius: var(--radius);
+    }
+
+    /* ── MILESTONE BANNER ── */
+    .milestone {
+      display: none;
+      background: linear-gradient(135deg, var(--accent), #2d9e6e);
+      color: white;
+      padding: 16px 24px;
+      border-radius: var(--radius);
+      margin-bottom: 28px;
+      font-size: 0.9rem;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .milestone.visible { display: flex; }
+
+    .milestone-icon { font-size: 1.5rem; }
+
+    .milestone-text strong {
+      display: block;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    /* ── RESET ZONE ── */
+    .reset-zone {
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid var(--rule);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .reset-note {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      header { padding: 20px 16px; }
+      .stats { flex-wrap: wrap; }
+      .stat { flex: 1 1 50%; border-bottom: 1px solid var(--rule); }
+      main { padding: 24px 12px 60px; }
+      .grid { grid-template-columns: repeat(9, 1fr); gap: 5px; }
+      .section-title { font-size: 1.1rem; }
+      .brand { font-size: 1.5rem; }
+    }
+
+    @media (max-width: 420px) {
+      .grid { grid-template-columns: repeat(7, 1fr); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+
+    /* ── CONFETTI BURST ── */
+    .confetti-container {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 999;
+      overflow: hidden;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      animation: confetti-fall 1.4s ease-out forwards;
+    }
+
+    @keyframes confetti-fall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">90 Days <em>Alcohol Free</em></div>
+  <span class="tagline">Personal Challenge Tracker</span>
+</header>
+
+<div class="stats" id="statsBar">
+  <div class="stat">
+    <div class="stat-value" id="statStreak">0</div>
+    <div class="stat-label">Current Streak</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="statChecked">0</div>
+    <div class="stat-label">Days Completed</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value amber" id="statLeft">90</div>
+    <div class="stat-label">Days Remaining</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="statPct">0%</div>
+    <div class="stat-label">Progress</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- MILESTONE BANNER -->
+  <div class="milestone" id="milestoneBanner">
+    <span class="milestone-icon" id="milestoneIcon">🏆</span>
+    <div class="milestone-text">
+      <strong id="milestoneTitle">Milestone!</strong>
+      <span id="milestoneDesc">Keep going.</span>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div class="section-header">
+    <span class="section-title">90-Day Calendar</span>
+    <span class="section-hint">Click a day to mark it ✓</span>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="progressLabel">Day 1 of 90</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="grid" id="dayGrid"></div>
+
+  <!-- JOURNAL -->
+  <div class="journal-section">
+    <div class="section-header">
+      <span class="section-title">Daily Notes</span>
+      <span class="section-hint">How are you feeling?</span>
+    </div>
+
+    <div class="journal-controls">
+      <label>Add note for today</label>
+      <input
+        type="text"
+        class="note-input"
+        id="noteInput"
+        placeholder="e.g. Craving passed after a walk. Feeling proud."
+        maxlength="200"
+      />
+      <button class="btn btn-primary" onclick="addNote()">Save note</button>
+    </div>
+
+    <div class="log-list" id="logList">
+      <div class="empty-log">No notes yet — start writing when you're ready.</div>
+    </div>
+  </div>
+
+  <!-- RESET -->
+  <div class="reset-zone">
+    <span class="reset-note">All data is stored locally in your browser.</span>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" onclick="exportData()">Export JSON</button>
+      <button class="btn btn-ghost" onclick="confirmReset()">Reset all</button>
+    </div>
+  </div>
+
+</main>
+
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const TOTAL = 90;
+const STORAGE_KEY = 'habit90_v1';
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { startDate: null, checked: {}, notes: [] };
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+let data = loadData();
+
+// Auto-set start date on first visit
+if (!data.startDate) {
+  data.startDate = todayStr();
+  saveData(data);
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function dateOfDay(n) {
+  // n is 1-indexed
+  const d = new Date(data.startDate);
+  d.setDate(d.getDate() + n - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function dayOfDate(dateStr) {
+  const start = new Date(data.startDate);
+  const target = new Date(dateStr);
+  const diff = Math.round((target - start) / 86400000) + 1;
+  return diff;
+}
+
+function currentDayIndex() {
+  return dayOfDate(todayStr());
+}
+
+// ── MILESTONES ────────────────────────────────────────────────────────────
+const MILESTONES = [
+  { day: 1,  icon: '🌱', title: 'Day 1 done!', desc: 'Every journey starts with one step.' },
+  { day: 3,  icon: '✨', title: '3-day streak!', desc: 'Your body is already starting to recover.' },
+  { day: 7,  icon: '🗓️', title: 'One week!', desc: 'Sleep quality likely improving. Keep it up.' },
+  { day: 14, icon: '💪', title: 'Two weeks strong', desc: 'Mental clarity is sharpening.' },
+  { day: 21, icon: '🔥', title: '21 days — new habit forming', desc: 'Research says 21 days to build a habit.' },
+  { day: 30, icon: '🏅', title: '30-day milestone', desc: 'One month alcohol-free. That\'s huge.' },
+  { day: 60, icon: '🌟', title: 'Halfway double down!', desc: '60 days. Your liver is celebrating.' },
+  { day: 90, icon: '🏆', title: 'CHALLENGE COMPLETE!', desc: '90 days alcohol-free. You did it!' },
+];
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function render() {
+  renderGrid();
+  renderStats();
+  renderLog();
+  renderMilestone();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('dayGrid');
+  grid.innerHTML = '';
+  const today = currentDayIndex();
+
+  for (let i = 1; i <= TOTAL; i++) {
+    const dateStr = dateOfDay(i);
+    const isChecked = !!data.checked[i];
+    const isToday = i === today;
+    const isFuture = i > today;
+
+    const cell = document.createElement('div');
+    cell.className = 'day-cell'
+      + (isChecked ? ' checked' : '')
+      + (isToday ? ' today' : '')
+      + (isFuture ? ' future' : '');
+
+    cell.innerHTML = `
+      <span class="day-num">${i}</span>
+      <span class="tooltip">${formatDateShort(dateStr)}${isChecked ? ' · ✓ Done' : isToday ? ' · Today' : ''}</span>
+    `;
+
+    if (!isFuture) {
+      cell.addEventListener('click', () => toggleDay(i));
+    }
+
+    grid.appendChild(cell);
+  }
+}
+
+function formatDateShort(str) {
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
+function renderStats() {
+  const checked = Object.values(data.checked).filter(Boolean).length;
+  const today = currentDayIndex();
+  const remaining = Math.max(0, TOTAL - checked);
+  const pct = Math.round((checked / TOTAL) * 100);
+  const streak = calcStreak();
+
+  document.getElementById('statStreak').textContent = streak;
+  document.getElementById('statChecked').textContent = checked;
+  document.getElementById('statLeft').textContent = remaining;
+  document.getElementById('statPct').textContent = pct + '%';
+
+  const clampedDay = Math.min(Math.max(today, 1), TOTAL);
+  document.getElementById('progressLabel').textContent = `Day ${clampedDay} of ${TOTAL}`;
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function calcStreak() {
+  const today = currentDayIndex();
+  let streak = 0;
+  for (let i = today; i >= 1; i--) {
+    if (data.checked[i]) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function renderLog() {
+  const list = document.getElementById('logList');
+  if (!data.notes || data.notes.length === 0) {
+    list.innerHTML = '<div class="empty-log">No notes yet — start writing when you\'re ready.</div>';
+    return;
+  }
+  const sorted = [...data.notes].sort((a, b) => b.day - a.day);
+  list.innerHTML = sorted.map(n => `
+    <div class="log-entry">
+      <span class="log-day-badge">Day ${n.day}</span>
+      <span class="log-text">${escHtml(n.text)}</span>
+      <span class="log-date">${formatDateShort(n.date)}</span>
+    </div>
+  `).join('');
+}
+
+function renderMilestone() {
+  const today = currentDayIndex();
+  // Show milestone for most recent qualifying milestone that's been checked
+  let latest = null;
+  for (const m of MILESTONES) {
+    if (m.day <= today && data.checked[m.day]) latest = m;
+  }
+  const banner = document.getElementById('milestoneBanner');
+  if (latest) {
+    document.getElementById('milestoneIcon').textContent = latest.icon;
+    document.getElementById('milestoneTitle').textContent = latest.title;
+    document.getElementById('milestoneDesc').textContent = latest.desc;
+    banner.classList.add('visible');
+  } else {
+    banner.classList.remove('visible');
+  }
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────
+function toggleDay(n) {
+  const wasChecked = !!data.checked[n];
+  data.checked[n] = !wasChecked;
+  saveData(data);
+  render();
+
+  if (!wasChecked) {
+    checkMilestone(n);
+    burst();
+  }
+}
+
+function checkMilestone(n) {
+  const m = MILESTONES.find(m => m.day === n);
+  if (m) bigBurst();
+}
+
+function addNote() {
+  const input = document.getElementById('noteInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const today = currentDayIndex();
+  if (!data.notes) data.notes = [];
+  data.notes.push({
+    day: Math.max(1, Math.min(today, TOTAL)),
+    date: todayStr(),
+    text
+  });
+  saveData(data);
+  input.value = '';
+  renderLog();
+}
+
+document.getElementById('noteInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addNote();
+});
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `90days_backup_${todayStr()}.json`;
+  a.click();
+}
+
+function confirmReset() {
+  if (confirm('Reset everything? This cannot be undone.')) {
+    localStorage.removeItem(STORAGE_KEY);
+    data = { startDate: todayStr(), checked: {}, notes: [] };
+    saveData(data);
+    render();
+  }
+}
+
+// ── CONFETTI ──────────────────────────────────────────────────────────────
+const COLORS = ['#1a6b4a','#d4a847','#2d9e6e','#f7f4ef','#0f1117'];
+
+function spawnConfetti(count) {
+  const container = document.getElementById('confettiContainer');
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left: ${Math.random() * 100}%;
+      top: -10px;
+      background: ${COLORS[Math.floor(Math.random() * COLORS.length)]};
+      animation-delay: ${Math.random() * 0.5}s;
+      animation-duration: ${1 + Math.random() * 0.8}s;
+      transform: rotate(${Math.random() * 360}deg);
+    `;
+    container.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
+function burst() { spawnConfetti(18); }
+function bigBurst() { spawnConfetti(60); }
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+render();
+</script>
+
+</body>
+</html>
