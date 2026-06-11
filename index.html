@@ -501,7 +501,7 @@ function createChallenge() {
 function openChallenge(id) {
   activeId = id;
   document.getElementById('dashboardView').style.display = 'none';
-  document.getElementById('trackerView').style.display   = '';
+  document.getElementById('trackerView').style.display   = 'block';
   renderTracker();
   document.getElementById('noteInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') addNote();
