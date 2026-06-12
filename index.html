@@ -1033,8 +1033,8 @@ function closeQC(){document.getElementById('qcModal').classList.remove('open');}
 function saveQC(){
   const text=document.getElementById('qcInput').value.trim();if(!text)return;
   db.inbox.push({id:uid(),text:text,createdAt:todayStr(),processed:false});
-  save();closeQC();document.getElementById('qcInput').value='';renderToday();
-  // flash confirmation
+  save();closeQC();document.getElementById('qcInput').value='';
+  rerenderCurrent();
   const fab=document.querySelector('.qc-fab');if(fab){fab.textContent='✓';setTimeout(function(){fab.textContent='⚡';},800);}
 }
 function renderInbox(){
