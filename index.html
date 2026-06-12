@@ -115,9 +115,12 @@
     .task-text { flex:1; font-size:0.88rem; min-width:0; overflow-wrap:break-word; }
     .task-age { font-family:'JetBrains Mono',monospace; font-size:0.62rem; background:#fdf3e0; color:#b07d1e; border:1px solid #f0dcb0; border-radius:99px; padding:1px 7px; white-space:nowrap; flex-shrink:0; }
     .task-frog-btn,.task-del { background:none; border:none; cursor:pointer; font-size:0.85rem; color:var(--muted); padding:2px 5px; border-radius:5px; flex-shrink:0; opacity:0; transition:opacity 0.15s,color 0.15s; }
-    .task-row:hover .task-frog-btn,.task-row:hover .task-del { opacity:1; }
+    .task-row:hover .task-frog-btn,.task-row:hover .task-del,.task-row:hover .task-edit { opacity:1; }
     .task-frog-btn:hover { color:var(--frog); }
     .task-del:hover { color:#c0392b; }
+    .task-edit { background:none; border:none; cursor:pointer; font-size:0.82rem; color:var(--muted); padding:2px 5px; border-radius:5px; flex-shrink:0; opacity:0; transition:opacity 0.15s,color 0.15s; }
+    .task-edit:hover { color:var(--accent); }
+    .task-edit-input { flex:1; border:none; border-bottom:2px solid var(--accent); background:transparent; outline:none; font-family:'Inter',sans-serif; font-size:0.88rem; color:var(--ink); padding:2px 4px; min-width:0; }
     .shutdown-cta { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:12px; padding:13px; background:linear-gradient(135deg,#2c3550,#1c2438); color:#cdd7f5; border:none; border-radius:12px; font-family:'Inter',sans-serif; font-size:0.88rem; font-weight:500; cursor:pointer; transition:transform 0.1s; }
     .shutdown-cta:hover { transform:translateY(-1px); }
     .shutdown-cta.closed { background:var(--accent-lt); color:var(--accent); cursor:default; }
@@ -566,6 +569,19 @@ function rolloverTasks(){
   }
   if(changed)save();
 }
+// Auto-rollover at midnight if app stays open
+function scheduleMidnightRollover(){
+  const now=new Date();
+  const tomorrow=new Date(now);
+  tomorrow.setDate(tomorrow.getDate()+1);
+  tomorrow.setHours(0,0,5,0); // 00:00:05 next day
+  const msUntilMidnight=tomorrow-now;
+  setTimeout(function(){
+    rolloverTasks();
+    if(currentView==='today')renderToday();
+    scheduleMidnightRollover(); // schedule next midnight
+  },msUntilMidnight);
+}
 
 // ══ NAV ══
 function hideAllViews(){for(const v of['todayView','progressView','dashboardView','trackerView'])document.getElementById(v).style.display='none';}
@@ -643,6 +659,7 @@ function renderBlock(block){
     +'<div class="check'+(x.done?' on':'')+'" onclick="toggleTask(\''+x.id+'\')">✓</div>'
     +'<span class="task-text">'+escHtml(x.text)+'</span>'
     +(x.age?'<span class="task-age">'+x.age+'d old</span>':'')
+    +'<button class="task-edit" onclick="editTask(\''+x.id+'\')" title="Edit">✏️</button>'
     +'<button class="task-frog-btn" onclick="makeFrog(\''+x.id+'\')" title="Make this the frog">🐸</button>'
     +'<button class="task-del" onclick="deleteTask(\''+x.id+'\')" title="Delete">✕</button>'
     +'</div>').join('');
@@ -673,6 +690,46 @@ function makeFrog(id){
   const task=arr.splice(i,1)[0];
   db.frogs[t]={text:task.text,done:task.done};
   save();renderToday();
+}
+function editTask(id){
+  // Find the task row in the DOM and replace text span with an input
+  const task=todayTasks().find(x=>x.id===id);
+  if(!task)return;
+  // Find all task-rows and locate the one with this id
+  document.querySelectorAll('.task-row').forEach(function(row){
+    const editBtn=row.querySelector('.task-edit');
+    if(!editBtn)return;
+    if(editBtn.getAttribute('onclick')!=="editTask('"+id+"')")return;
+    const span=row.querySelector('.task-text');
+    if(!span)return;
+    // Replace span with input
+    const input=document.createElement('input');
+    input.type='text';
+    input.className='task-edit-input';
+    input.value=task.text;
+    input.maxLength=160;
+    span.replaceWith(input);
+    input.focus();
+    input.select();
+    // Show all action buttons while editing
+    row.querySelectorAll('.task-edit,.task-frog-btn,.task-del').forEach(b=>b.style.opacity='1');
+    function save_edit(){
+      const newText=input.value.trim();
+      if(newText&&newText!==task.text){
+        task.text=newText;
+        save();
+      }
+      renderToday();
+    }
+    input.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){e.preventDefault();save_edit();}
+      if(e.key==='Escape'){renderToday();}
+    });
+    input.addEventListener('blur',function(){
+      // Small delay so click on buttons doesn't fire blur first
+      setTimeout(save_edit,120);
+    });
+  });
 }
 
 // ══ PROGRESS ══
@@ -1285,6 +1342,7 @@ function enterApp(){
 document.getElementById('taskInput').addEventListener('keydown',function(e){if(e.key==='Enter')addTask();});
 document.getElementById('paletteInput').addEventListener('input',function(){palSel=0;renderPalette();});
 rolloverTasks();
+scheduleMidnightRollover();
 updateXpUI();
 
 currentUser=loadUser();
