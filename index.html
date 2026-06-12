@@ -1407,7 +1407,14 @@ function setSyncState(s){
 function initTokenClient(){
   if(tokenClient||typeof google==='undefined'||!google.accounts||!google.accounts.oauth2)return;
   tokenClient=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:DRIVE_SCOPE,callback:function(resp){
-    if(resp.error){setSyncState('error');return;}
+    if(resp.error){
+      // If silent request failed because consent wasn't granted, try interactive
+      if(resp.error==='interaction_required'||resp.error==='consent_required'||resp.error==='login_required'){
+        try{tokenClient.requestAccessToken({prompt:'consent'});}catch(e){setSyncState('error');}
+        return;
+      }
+      setSyncState('error');return;
+    }
     accessToken=resp.access_token;tokenExpiry=Date.now()+((resp.expires_in||3600)*1000)-60000;
     localStorage.setItem('stride_token',JSON.stringify({t:accessToken,e:tokenExpiry}));startSync();
   }});
@@ -1475,7 +1482,21 @@ autoPromptReview();autoShowMonthlyWrap();
 
 currentUser=loadUser();
 if(currentUser){
-  document.getElementById('loginView').style.display='none';renderDrawerProfile();showToday();enableSync(false);
+  document.getElementById('loginView').style.display='none';renderDrawerProfile();showToday();
+  // If we have a valid cached Drive token, sync silently.
+  // Otherwise prompt for Drive access automatically so new devices sync right away.
+  (function(){
+    try{
+      const cached=JSON.parse(localStorage.getItem('stride_token')||'null');
+      if(cached&&cached.e>Date.now()){
+        enableSync(false); // silent — token still valid
+      }else{
+        // No valid token — auto-request Drive access after short delay
+        // (delay lets the page render first so user sees a proper popup context)
+        setTimeout(function(){enableSync(true);},1200);
+      }
+    }catch(e){setTimeout(function(){enableSync(true);},1200);}
+  })();
 }else{
   document.querySelector('.login-card').insertAdjacentHTML('beforeend','<div id="googleFallbackBtn" style="margin-top:4px;"></div>');
   const initGSI=function(){
